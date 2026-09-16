@@ -22,6 +22,8 @@ export interface ResendOtp {
 export interface HeroCarousel {
   image: string;
   priority: number;
+  product_id: string | null;
+  is_active: boolean;
 }
 
 export interface StepTellsStory {

@@ -54,9 +54,10 @@ const Navbar = () => {
   return (
     <nav className="py-1 shadow-md border-gray-400 bg-white/60 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4">
+       
         {/* Logo */}
         <Link to="/" className="text-2xl font-bold tracking-wide text-gray-800">
-          <img src="/speedine_logo.png" alt="" className="w-24" />
+          <img src="/speedine_logo.png" alt="nav-log" className="w-24" />
         </Link>
 
         {/* Navigation Items */}
@@ -100,7 +101,7 @@ const Navbar = () => {
                   </Link>
 
                   {/* Loop categories */}
-                  {categories.map((cat) => (
+                  {categories?.map((cat) => (
                     <Link
                       key={cat.id}
                       to={`/products?category=${cat.unique_id}`}

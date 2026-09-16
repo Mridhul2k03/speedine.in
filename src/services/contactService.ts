@@ -1,5 +1,5 @@
 import axiosInstance from "../api/axiosInstance";
-import type {Contact} from "../types";
+import type { Contact } from "../types";
 
 
 export const sendContactForm = async (data: Contact) => {

@@ -145,21 +145,19 @@ const AuthPage = () => {
         {/* Auth Toggle */}
         <div className="flex justify-center gap-6 mb-6">
           <button
-            className={`text-lg font-semibold pb-1 border-b-2 transition ${
-              mode === "login"
-                ? "border-[#D1A837] text-[#D1A837]"
-                : "border-transparent text-gray-500"
-            }`}
+            className={`text-lg font-semibold pb-1 border-b-2 transition ${mode === "login"
+              ? "border-[#D1A837] text-[#D1A837]"
+              : "border-transparent text-gray-500"
+              }`}
             onClick={() => setMode("login")}
           >
             Login
           </button>
           <button
-            className={`text-lg font-semibold pb-1 border-b-2 transition ${
-              mode === "register"
-                ? "border-[#D1A837] text-[#D1A837]"
-                : "border-transparent text-gray-500"
-            }`}
+            className={`text-lg font-semibold pb-1 border-b-2 transition ${mode === "register"
+              ? "border-[#D1A837] text-[#D1A837]"
+              : "border-transparent text-gray-500"
+              }`}
             onClick={() => setMode("register")}
           >
             Register
@@ -244,11 +242,10 @@ const AuthPage = () => {
             type="submit"
             disabled={loading}
             className={`w-full py-3 text-lg font-semibold rounded-xl transition flex justify-center items-center gap-2
-      ${
-        loading
-          ? "bg-[#D1A837]/70 cursor-not-allowed"
-          : "bg-[#D1A837] hover:bg-[#b88e2e] text-white"
-      }`}
+      ${loading
+                ? "bg-[#D1A837]/70 cursor-not-allowed"
+                : "bg-[#D1A837] hover:bg-[#b88e2e] text-white"
+              }`}
           >
             {loading && (
               <span className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>

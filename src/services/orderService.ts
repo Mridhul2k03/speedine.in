@@ -1,5 +1,5 @@
 import axiosInstance from "../api/axiosInstance";
-import type { PaymentPayload,RazorpayOrderResponse } from "../types";
+import type { PaymentPayload, RazorpayOrderResponse } from "../types";
 
 export const createOrder = async (
   checkoutData: PaymentPayload

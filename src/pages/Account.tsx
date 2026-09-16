@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, useNavigate } from "react-router-dom";
 import type {
   AddressResponse,
@@ -53,6 +54,7 @@ const Account = () => {
   const [activeTab, setActiveTab] = useState("orders");
   // const { userAddress: addresses } = useUserAddress();
   const { mutate: setDefaultAddress } = useSetDefaultAddress();
+  const queryClient = useQueryClient();
   const { userOrders: orders } = useUserOrders();
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [editingAddress, setEditingAddress] = useState<AddressResponse | null>(
@@ -95,12 +97,20 @@ const Account = () => {
     setAddresses((prev) =>
       prev.map((addr) => (addr.id === id ? updated : addr))
     );
+
+    // Invalidate shipping charge so Cart/Checkout recalculate
+    queryClient.invalidateQueries({ queryKey: ["shippingCharge"] });
+    queryClient.invalidateQueries({ queryKey: ["user-address"] });
   };
 
   const handleAddAddress = async (data: AddressPayload) => {
     const newAddress = await addAddress(data);
     toast.success("Address added successfully");
     setAddresses((prev) => [newAddress, ...prev]);
+
+    // Invalidate shipping charge so Cart/Checkout recalculate
+    queryClient.invalidateQueries({ queryKey: ["shippingCharge"] });
+    queryClient.invalidateQueries({ queryKey: ["user-address"] });
   };
 
   const handleDeleteAddress = async (id: number) => {
@@ -109,6 +119,10 @@ const Account = () => {
     await deleteAddress(id);
     toast.success("Address deleted successfully");
     setAddresses((prev) => prev.filter((addr) => addr.id !== id));
+
+    // Invalidate shipping charge so Cart/Checkout recalculate
+    queryClient.invalidateQueries({ queryKey: ["shippingCharge"] });
+    queryClient.invalidateQueries({ queryKey: ["user-address"] });
   };
 
   const isLoggedIn = localStorage.getItem("accessToken") ? true : false;
@@ -309,134 +323,124 @@ const Account = () => {
                         </button>
                       </div>
                     ) : (
-                      <div className="space-y-6">
-                                               {" "}
-                        {orders.map((order) => (
-                          <div
-                            key={order.id}
-                            className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-xl transition-all"
-                          >
-                                                        {/* Header */}         
-                                             {" "}
-                            <div className="flex flex-col md:flex-row md:items-center justify-between px-6 py-5 border-b">
-                                                           {" "}
-                              <div>
-                                {/*                                 <p className="text-lg font-semibold text-[#640000]">
-                                  Order #{order.id}
-                                </p> */}
-                                                               {" "}
-                                <p className="text-sm text-gray-500 mt-1">
-                                                                    Placed on{" "}
-                                  {formatDate(order.created)}                   
-                                             {" "}
-                                </p>
-                                                             {" "}
-                              </div>
-                                                           {" "}
-                              <span className="mt-3 md:mt-0 inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium bg-amber-50 text-amber-700">
-                                                               {" "}
-                                {order.status.charAt(0).toUpperCase() +
-                                  order.status.slice(1)}
-                                                             {" "}
-                              </span>
-                                                         {" "}
-                            </div>
-                                                        {/* Items */}           
-                                           {" "}
-                            <div className="px-6 py-5">
-                                                           {" "}
-                              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                                               {" "}
-                                {order.items.map((item, idx) => (
-                                  <div
-                                    key={`${order.id}-${idx}`}
-                                    className="flex gap-3 p-3 bg-gray-50 rounded-xl"
-                                  >
-                                                                       {" "}
-                                    <img
-                                      src={item?.product?.images?.[0]?.image}
-                                      alt={item.product.name}
-                                      className="w-16 h-16 rounded-lg object-cover"
-                                      onError={(e) => {
-                                        e.currentTarget.src =
-                                          "https://images.unsplash.com/photo-1599639957043-f3aa5c986398?w=100&h=100&fit=crop";
-                                      }}
-                                    />
-                                                                       {" "}
-                                    <div>
-                                                                           {" "}
-                                      <p className="font-medium text-gray-900 text-sm">
-                                                                               {" "}
-                                        {item.product.name}                     
-                                                       {" "}
-                                      </p>
-                                                                           {" "}
-                                      <p className="text-xs text-gray-500">
-                                                                               
-                                        Quantity: {item.quantity}               
-                                                             {" "}
-                                      </p>
-                                                                         {" "}
-                                    </div>
-                                                                     {" "}
+                      <div className="space-y-5">
+                        {orders.map((order) => {
+                          // Status config
+                          const statusConfig: Record<string, { label: string; color: string; dot: string }> = {
+                            pending:    { label: "Pending",    color: "bg-amber-50 text-amber-700 border border-amber-200",    dot: "bg-amber-500" },
+                            processing: { label: "Processing", color: "bg-blue-50 text-blue-700 border border-blue-200",       dot: "bg-blue-500" },
+                            shipped:    { label: "Shipped",    color: "bg-indigo-50 text-indigo-700 border border-indigo-200", dot: "bg-indigo-500" },
+                            delivered:  { label: "Delivered",  color: "bg-green-50 text-green-700 border border-green-200",    dot: "bg-green-500" },
+                            cancelled:  { label: "Cancelled",  color: "bg-red-50 text-red-700 border border-red-200",          dot: "bg-red-500" },
+                          };
+                          const status = statusConfig[order.status] ?? statusConfig.pending;
+
+                          return (
+                            <div
+                              key={order.id}
+                              className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-shadow duration-300 overflow-hidden"
+                            >
+                              {/* ── Card Header ── */}
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-5 py-4 bg-gradient-to-r from-[#fdf8ee] to-white border-b border-gray-100">
+                                <div className="flex items-center gap-3">
+                                  {/* Order icon */}
+                                  <div className="w-9 h-9 rounded-xl bg-[#DBB737]/15 flex items-center justify-center shrink-0">
+                                    <svg className="w-5 h-5 text-[#DBB737]" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                                    </svg>
                                   </div>
-                                ))}
-                                                             {" "}
+                                  <div>
+                                    <p className="text-xs text-gray-400 leading-none mb-0.5">Order placed</p>
+                                    <p className="text-sm font-semibold text-gray-800">{formatDate(order.created)}</p>
+                                  </div>
+                                </div>
+
+                                {/* Status badge */}
+                                <span className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${status.color}`}>
+                                  <span className={`w-1.5 h-1.5 rounded-full ${status.dot} animate-pulse`} />
+                                  {status.label}
+                                </span>
                               </div>
-                                                         {" "}
+
+                              {/* ── Items Grid ── */}
+                              <div className="px-5 py-4">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                                  {order.items.map((item, idx) => (
+                                    <div
+                                      key={`${order.id}-${idx}`}
+                                      className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100 hover:border-[#DBB737]/40 transition"
+                                    >
+                                      <div className="relative shrink-0">
+                                        <img
+                                          src={item?.product?.images?.[0]?.image}
+                                          alt={item.product.name}
+                                          className="w-14 h-14 rounded-lg object-cover"
+                                          onError={(e) => {
+                                            e.currentTarget.src = "/images/video-fallback.jpg";
+                                          }}
+                                        />
+                                        <span className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-[#640000] text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                                          {item.quantity}
+                                        </span>
+                                      </div>
+                                      <div className="min-w-0">
+                                        <p className="text-sm font-semibold text-gray-800 leading-tight line-clamp-2">
+                                          {item.product.name}
+                                        </p>
+                                        <p className="text-xs text-[#640000] font-medium mt-1">
+                                          ₹{Number(item.sub_total).toFixed(0)}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              {/* ── Card Footer ── */}
+                              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-5 py-4 bg-gray-50/60 border-t border-gray-100">
+                                <div className="flex items-baseline gap-3">
+                                  <div>
+                                    <p className="text-xs text-gray-400 mb-0.5">Order Total</p>
+                                    <p className="text-xl font-bold text-[#640000]">
+                                      ₹{Number(order.total_amount).toFixed(0)}
+                                    </p>
+                                  </div>
+                                  {order.shipping_charge > 0 && (
+                                    <span className="text-xs text-gray-400">
+                                      + ₹{order.shipping_charge} shipping
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="flex gap-2">
+                                  {order.invoice && (
+                                    <button
+                                      type="button"
+                                      title="View Invoice"
+                                      onClick={() => window.open(order.invoice, "_blank")}
+                                      className="flex items-center gap-1.5 px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-xl hover:bg-white hover:border-[#DBB737] hover:text-[#DBB737] transition"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                      </svg>
+                                      Invoice
+                                    </button>
+                                  )}
+                                  {order.status === "delivered" && (
+                                    <button
+                                      title="Reorder"
+                                      className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-white bg-gradient-to-r from-[#DBB737] to-amber-600 rounded-xl hover:opacity-90 transition shadow-sm"
+                                    >
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                                      </svg>
+                                      Reorder
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
                             </div>
-                                                        {/* Footer */}         
-                                             {" "}
-                            <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 py-5 border-t gap-4">
-                                                           {" "}
-                              <div>
-                                                               {" "}
-                                <p className="text-sm text-gray-500">
-                                                                    Total Amount
-                                                                 {" "}
-                                </p>
-                                                               {" "}
-                                <p className="text-2xl font-semibold text-[#640000]">
-                                                                    ₹
-                                  {Number(order.total_amount).toFixed(0)}       
-                                                         {" "}
-                                </p>
-                                                             {" "}
-                              </div>
-                                                           {" "}
-                              <div className="flex gap-3">
-                                                               {" "}
-                                {order.invoice && (
-                                  <button
-                                    type="button"
-                                    title="View Invoice"
-                                    onClick={() =>
-                                      window.open(order.invoice, "_blank")
-                                    }
-                                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition"
-                                  >
-                                                                        View
-                                    Invoice                                  {" "}
-                                  </button>
-                                )}
-                                                               {" "}
-                                {order.status === "delivered" && (
-                                  <button
-                                    title="Reorder"
-                                    className="px-5 py-2 bg-linear-to-r from-[#DBB737] to-amber-600 text-white rounded-lg font-medium hover:opacity-90 transition"
-                                  >
-                                                                        Reorder
-                                                                     {" "}
-                                  </button>
-                                )}
-                                                             {" "}
-                              </div>
-                                                         {" "}
-                            </div>
-                                                     {" "}
-                          </div>
-                        ))}
-                                             {" "}
+                          );
+                        })}
                       </div>
                     )}
                   </div>

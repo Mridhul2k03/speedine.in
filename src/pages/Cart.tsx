@@ -15,6 +15,8 @@ import useCart from "../hooks/useUserCart";
 import { useNavigate } from "react-router-dom";
 import axiosInstance from "../api/axiosInstance";
 import CartSkeleton from "../components/skeletons/CartSkeleton";
+import useUserAddress from "../hooks/useUserAddress";
+import { useShippingCharge } from "../hooks/useShippingCharge";
 
 type LocalCartItem = {
   id: string | number;
@@ -33,6 +35,14 @@ const Cart = () => {
   const navigate = useNavigate();
   const { cart, refreshCart, loading } = useCart();
   const [localItems, setLocalItems] = useState<LocalCartItem[]>([]);
+
+  // Derive default address state for shipping charge
+  const { userAddress } = useUserAddress();
+  const defaultAddress = Array.isArray(userAddress)
+    ? userAddress.find((a) => a.is_default) ?? userAddress[0] ?? null
+    : null;
+  const defaultAddressState = defaultAddress?.state ?? "";
+  const { shippingCharge } = useShippingCharge(defaultAddressState);
 
   useEffect(() => {
     if (cart?.items) {
@@ -126,7 +136,7 @@ const Cart = () => {
     0
   );
 
-  const shipping = subtotal > 500 ? 0 : 50;
+  const shipping = subtotal > 500 ? 0 : shippingCharge || 0;
   const total = subtotal + shipping;
 
   if (loading) {
@@ -221,7 +231,7 @@ const Cart = () => {
                         {Math.round(
                           ((item.originalPrice - item.price) /
                             item.originalPrice) *
-                            100
+                          100
                         )}
                         % OFF
                       </div>

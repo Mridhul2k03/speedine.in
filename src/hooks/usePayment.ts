@@ -2,7 +2,7 @@ import axiosInstance from "../api/axiosInstance";
 import { loadRazorpayScript } from "../utils/loadRazorpay";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import type { PaymentPayload,RazorpayOrderResponse } from "../types";
+import type { PaymentPayload, RazorpayOrderResponse } from "../types";
 
 export default function usePayment() {
   const navigate = useNavigate();

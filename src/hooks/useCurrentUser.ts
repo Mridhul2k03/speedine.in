@@ -8,7 +8,7 @@ export function useCurrentUser() {
     retry: false,
     staleTime: 1000 * 60 * 5,
   });
- 
+
   return {
     user,
     loading: isLoading,
