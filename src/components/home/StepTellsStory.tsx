@@ -52,13 +52,9 @@ const StepTellsStory = () => {
                 Story
               </span>
             </h1>
-            <p className="md:text-lg text-sm text-justify md:text-start text-slate-600 leading-relaxed">
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Accusamus
-              facere placeat tempora molestias similique, ut esse vitae, nulla
-              inventore unde voluptatem? Nulla doloribus pariatur maiores
-              eligendi dolores voluptatibus minima nemo commodi cumque illo,
-              possimus laboriosam iusto accusantium animi necessitatibus enim
-              rem repudiandae ad quis minus amet quibusdam dicta hic.
+            <p className="md:text-lg text-sm text-slate-600 leading-relaxed text-justify">
+              Authentic taste, instantly!
+              We brings the rich, authentic taste of traditional cooking straight to your kitchen with our Instant Ready Mix Masala. No complicated preparation—just mix, cook, and enjoy delicious homemade flavors in minutes. Crafted with premium spices, Speedline makes every meal quick, convenient, and irresistibly tasty for your family.
             </p>
             <Link to="/about">
               <button className="mt-2 md:px-8 md:py-3 px-4 py-2 md:text-sm text-xs bg-linear-to-r from-amber-700 to-[#640000] text-white font-semibold rounded-full hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200">

@@ -1,4 +1,4 @@
-import axiosInstance from "../api/axiosInstance";
+import axiosInstance from "./axiosInstance";
 
 export const addUserAddress = async (formData: any) => {
   const res = await axiosInstance.post("/users/user-address/", formData);

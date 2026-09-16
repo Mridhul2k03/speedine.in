@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Navbar from "./components/common/Navbar";
 import Footer from "./components/common/Footer";
 import ScrollToTop from "./components/common/ScrollToTop";
+import WhatsAppFloat from "./components/common/WhatsAppFloat";
 import { Toaster } from "sonner";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import Loader from "./components/common/Loader";
@@ -62,6 +63,7 @@ function App() {
             </Routes>
           </Suspense>
           <Footer />
+          <WhatsAppFloat />
         </GoogleOAuthProvider>
       </BrowserRouter>
     </div>

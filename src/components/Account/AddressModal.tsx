@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { X } from "lucide-react";
+import { X, ChevronDown, Loader2, AlertCircle } from "lucide-react";
 import type {
   AddressPayload,
   AddressResponse,
 } from "../../services/addressService";
+import { useStates } from "../../hooks/useStates";
 
 interface AddressModalProps {
   open: boolean;
@@ -33,6 +34,7 @@ const AddressModal = ({
 }: AddressModalProps) => {
   const [form, setForm] = useState<AddressPayload>(emptyForm);
   const [loading, setLoading] = useState(false);
+  const { states, loading: statesLoading, error: statesError } = useStates();
 
   useEffect(() => {
     if (initialData) {
@@ -119,18 +121,15 @@ const AddressModal = ({
               className="input"
             />
 
-            <select
-              name="country"
-              value={form.country}
-              onChange={handleChange}
-              className="input"
-              required
-            >
-              <option value="India">India</option>
-              <option value="United States">United States</option>
-              <option value="United Kingdom">United Kingdom</option>
-              <option value="Australia">Australia</option>
-            </select>
+            <div className="relative">
+              <input
+                name="country"
+                value="India"
+                readOnly
+                className="input bg-gray-50 text-gray-500 cursor-not-allowed"
+              />
+              <span className="absolute inset-y-0 right-3 flex items-center text-xs text-gray-400 pointer-events-none">Only India</span>
+            </div>
           </div>
 
           <textarea
@@ -152,14 +151,34 @@ const AddressModal = ({
               className="input"
             />
 
-            <input
-              name="state"
-              value={form.state}
-              onChange={handleChange}
-              placeholder="State"
-              required
-              className="input"
-            />
+            <div className="relative">
+              <select
+                name="state"
+                value={form.state}
+                onChange={handleChange}
+                required
+                disabled={statesLoading}
+                className="input appearance-none pr-10 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <option value="" disabled>
+                  {statesLoading ? "Loading states…" : statesError ? "Failed to load" : "Select State"}
+                </option>
+                {states.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                {statesLoading ? (
+                  <Loader2 size={16} className="animate-spin" />
+                ) : statesError ? (
+                  <AlertCircle size={16} className="text-red-400" />
+                ) : (
+                  <ChevronDown size={16} />
+                )}
+              </div>
+            </div>
 
             <input
               name="pincode"

@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import ImageMagnifier from "../components/products/ImageMagnifier";
 import { useCurrentUser } from "../hooks/useCurrentUser";
+import ProductSEO from "../components/common/ProductSEO";
 
 const ratingStarLabels = ["first", "second", "third", "fourth", "fifth"];
 
@@ -69,6 +70,15 @@ const DetailPage = () => {
 
   return (
     <div className="min-h-screen bg-linear-to-br from-orange-50 via-white to-red-50">
+      {/* Per-product SEO */}
+      {filteredProduct && (
+        <ProductSEO
+          name={filteredProduct.name}
+          description={filteredProduct.description}
+          image={filteredProduct.images?.[0]?.image ?? ""}
+          price={Number(filteredProduct.price)}
+        />
+      )}
       {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-3 py-8">
         <div className="grid md:grid-cols-2 gap-8 mb-12">
@@ -79,7 +89,7 @@ const DetailPage = () => {
               <ImageMagnifier
                 src={filteredProduct?.images?.[selectedImage]?.image ?? ""}
                 zoom={2.5}
-                className="w-full h-96 rounded-2xl"
+                className="w-full h-full rounded-2xl"
               />
             </div>
 

@@ -45,6 +45,7 @@ const NewArrival = () => {
           {featuredProducts?.map((product) => (
             <div
               key={product.unique_id}
+              onClick={() => navigate(`/detail/${product.unique_id}`)}
               className="
             snap-start
             bg-white rounded-2xl
@@ -52,6 +53,7 @@ const NewArrival = () => {
             transition-all duration-300
             overflow-hidden
             group
+            cursor-pointer
           "
             >
               {/* Image */}
@@ -59,12 +61,11 @@ const NewArrival = () => {
                 <img
                   src={product.images[0]?.image || "/hero-right4.webp"}
                   alt={product.name}
-                  onClick={() => navigate(`/detail/${product.unique_id}`)}
                   onError={(e) => {
                     e.currentTarget.onerror = null;
                     e.currentTarget.src = "/images/video-fallback.jpg";
                   }}
-                  className="w-full h-full object-contain cursor-pointer group-hover:scale-110 transition-transform duration-500"
+                  className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
                 />
 
                 {/* Overlay CTA */}
@@ -84,8 +85,7 @@ const NewArrival = () => {
                     </span>
                   )}
                 </div>
-                <button
-                  onClick={() => navigate(`/detail/${product.unique_id}`)}
+                <div
                   className="
                 absolute bottom-4 left-1/2 -translate-x-1/2
                 bg-white text-[#640000]
@@ -93,11 +93,11 @@ const NewArrival = () => {
                 opacity-0 group-hover:opacity-100
                 translate-y-4 group-hover:translate-y-0
                 transition-all duration-300
-                hover:bg-[#640000] hover:text-white
+                whitespace-nowrap
               "
                 >
-                  Quick View
-                </button>
+                  View Product →
+                </div>
               </div>
 
               {/* Content */}
@@ -124,7 +124,10 @@ const NewArrival = () => {
                   </div>
 
                   <button
-                    onClick={() => addToCart(product.unique_id, 1)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      addToCart(product.unique_id, 1);
+                    }}
                     className="
                   bg-[#640000] text-white
                   p-2.5 rounded-lg

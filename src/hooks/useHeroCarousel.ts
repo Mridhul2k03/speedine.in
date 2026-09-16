@@ -14,7 +14,7 @@ const useHeroCarousel = () => {
   });
 
   return {
-    carousel: data?.results || [], 
+    carousel: data?.results || [],
     loading: isLoading,
     error: isError ? error.message : null,
     refetch,

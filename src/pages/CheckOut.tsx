@@ -11,6 +11,8 @@ import {
   Truck,
   Shield,
   AlertCircle,
+  ChevronDown,
+  Loader2,
 } from "lucide-react";
 import Loader from "../components/common/Loader";
 import useUserAddress from "../hooks/useUserAddress";
@@ -20,6 +22,7 @@ import { createOrder, verifyPayment } from "../services/orderService";
 import type { PaymentPayload } from "../types";
 import { useCurrentUser } from "../hooks/useCurrentUser";
 import { useShippingCharge } from "../hooks/useShippingCharge";
+import { useStates } from "../hooks/useStates";
 import { toast } from "sonner";
 
 interface CartItem {
@@ -37,13 +40,21 @@ const CheckOut = () => {
   const [selectedAddress, setSelectedAddress] = useState<string | null>(null);
   const [showAddressForm, setShowAddressForm] = useState(false);
   const { user } = useCurrentUser();
-  const { shippingCharge } = useShippingCharge();
+
+  // Derive the state of the selected address for shipping charge lookup
+  const { userAddress } = useUserAddress();
+  const selectedAddressObj = Array.isArray(userAddress)
+    ? userAddress.find((a) => String(a.id) === String(selectedAddress))
+    : null;
+  const selectedAddressState = selectedAddressObj?.state ?? "";
+
+  const { shippingCharge } = useShippingCharge(selectedAddressState);
+  const { states, loading: statesLoading, error: statesError } = useStates();
 
   const [isProcessing, setIsProcessing] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
 
   const { mutate: addAddress } = useAddAddress();
-  const { userAddress } = useUserAddress();
 
   const location = useLocation();
   const checkoutState =
@@ -56,7 +67,18 @@ const CheckOut = () => {
       navigate("/cart", { replace: true });
     }
   }, [checkoutState, navigate]);
-  console.log(rawItems, "rawItems");
+
+  // Auto-select default address (or first address) when addresses load
+  useEffect(() => {
+    if (!Array.isArray(userAddress) || userAddress.length === 0) return;
+    // If already selected (e.g. user clicked something), don't override
+    if (selectedAddress) return;
+
+    const defaultAddr = userAddress.find((a) => a.is_default) ?? userAddress[0];
+    if (defaultAddr) {
+      setSelectedAddress(String(defaultAddr.id));
+    }
+  }, [userAddress]);
 
   const cartItems: CartItem[] = rawItems.map((item: any) => {
     if (item.product) {
@@ -112,7 +134,6 @@ const CheckOut = () => {
   const shipping = subtotal > 500 ? 0 : shippingCharge || 0;
 
   const total = subtotal + shipping;
-  console.log(total, "total amount");
 
   const handleAddressSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -326,9 +347,9 @@ const CheckOut = () => {
                       <button
                         key={address.id}
                         type="button"
-                        onClick={() => setSelectedAddress(address.id)}
+                        onClick={() => setSelectedAddress(String(address.id))}
                         className={`w-full text-left p-4 rounded-xl border-2 transition-all ${
-                          selectedAddress === address.id
+                          selectedAddress === String(address.id)
                             ? "border-[#DBB737] bg-amber-50"
                             : "border-gray-200 hover:border-gray-300"
                         }`}
@@ -364,7 +385,7 @@ const CheckOut = () => {
                             </div>
                           </div>
 
-                          {selectedAddress === address.id && (
+                          {selectedAddress === String(address.id) && (
                             <div className="p-1 bg-[#DBB737] rounded-full">
                               <Check size={16} className="text-white" />
                             </div>
@@ -520,21 +541,36 @@ const CheckOut = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        State
+                        State <span className="text-red-500">*</span>
                       </label>
-                      <input
-                        title="state"
-                        type="text"
-                        required
-                        value={newAddress.state}
-                        onChange={(e) =>
-                          setNewAddress({
-                            ...newAddress,
-                            state: e.target.value,
-                          })
-                        }
-                        className="w-full px-4 py-3 border rounded-xl"
-                      />
+                      <div className="relative">
+                        <select
+                          title="state"
+                          required
+                          value={newAddress.state}
+                          disabled={statesLoading}
+                          onChange={(e) =>
+                            setNewAddress({ ...newAddress, state: e.target.value })
+                          }
+                          className="w-full px-4 py-3 border rounded-xl appearance-none pr-10 focus:ring-2 focus:ring-[#DBB737] disabled:opacity-60 cursor-pointer"
+                        >
+                          <option value="" disabled>
+                            {statesLoading ? "Loading…" : statesError ? "Load failed" : "Select State"}
+                          </option>
+                          {states.map((s) => (
+                            <option key={s} value={s}>{s}</option>
+                          ))}
+                        </select>
+                        <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-gray-400">
+                          {statesLoading ? (
+                            <Loader2 size={16} className="animate-spin" />
+                          ) : statesError ? (
+                            <AlertCircle size={16} className="text-red-400" />
+                          ) : (
+                            <ChevronDown size={16} />
+                          )}
+                        </div>
+                      </div>
                     </div>
 
                     <div>
